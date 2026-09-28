@@ -527,33 +527,37 @@
         }
 
       function updateQRCode() {
-        const qrContainer = document.getElementById("qrcode");
-        qrContainer.innerHTML = "";
+    const qrContainer = document.getElementById("qrcode");
+    qrContainer.innerHTML = "";
 
-        const periodeStr = `${monthNames[state.bulanIdx]} ${state.tahun}`;
-        
-        // Teks yang akan terbaca saat QR Code di-scan
-        const qrText = `PRESENSI DIGITAL\n` +
-                    `Pegawai: ${state.namaPegawai} (${state.nipPegawai})\n` +
-                    `Unit Kerja: ${state.unitKerja}\n` +
-                    `Periode: ${periodeStr}\n` +
-                    `Kepala Sekolah: ${state.namaKepsek} (NIP. ${state.nipKepsek})\n` +
-                    `Tgl Unduh/Cetak: ${state.printTimestamp}`;
+    const periodeStr = `${monthNames[state.bulanIdx]} ${state.tahun}`;
+    
+    // Teks dibuat ringkas dengan pemisah '|' agar titik QR tidak terlalu rapat
+    const qrText = `PRESENSI DIGITAL | Pegawai: ${state.namaPegawai} (${state.nipPegawai}) | Unit: ${state.unitKerja} | Periode: ${periodeStr} | Kepsek: ${state.namaKepsek} (NIP.${state.nipKepsek}) | Tgl Cetak: ${state.printTimestamp}`;
 
-        try {
-            new QRCode(qrContainer, {
-                text: qrText,
-                width: 64,
-                height: 64,
-                colorDark: "#000000",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.L // Menggunakan Level L agar QR tetap mudah di-scan meskipun isi teks lebih panjang
-            });
-        } catch (err) {
-            console.error("QR Code generation error:", err);
-        }
+    try {
+        new QRCode(qrContainer, {
+            text: qrText,
+            width: 128,   // Resolusi tinggi agar titik QR tajam
+            height: 128,  // Resolusi tinggi agar titik QR tajam
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.L
+        });
+
+        // Paksa gambar QR hasil generate agar pas di dalam kotak header tanpa merusak layout
+        setTimeout(() => {
+            const qrImg = qrContainer.querySelector("img");
+            if (qrImg) {
+                qrImg.style.width = "100%";
+                qrImg.style.height = "100%";
+                qrImg.style.objectFit = "contain";
+            }
+        }, 50);
+    } catch (err) {
+        console.error("QR Code generation error:", err);
     }
-
+}
         function updateDocument() {
             state.gov1 = document.getElementById("inputGov1").value;
             state.gov2 = document.getElementById("inputGov2").value;
