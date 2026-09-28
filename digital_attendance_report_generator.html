@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laporan Daftar Hadir Harian Pegawai - Ukuran F4</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- QRCode.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* CSS Khusus Cetak Kertas F4 / Folio */
+        @page {
+            size: 215mm 330mm; /* Ukuran Standar F4 / Folio */
+            margin: 8mm 10mm 8mm 10mm;
+        }
+
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            background-color: #f1f5f9;
+            color: #000;
+        }
+
+        /* Styling Lembar Kerja Presisi A4/F4 */
+        .paper-sheet {
+            width: 215mm;
+            min-height: 320mm;
+            padding: 10mm 12mm;
+            margin: 0 auto;
+            background: #ffffff;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            box-sizing: border-box;
+        }
+
+        /* Pengaturan Garis Tabel Tegas */
+        table.print-table {
+            border-collapse: collapse !important;
+            width: 100%;
+        }
+
+        table.print-table th, 
+        table.print-table td {
+        border: 1px solid #000000 !important;
+        padding: 4px 6px !important; /* <--- UBAH DI SINI */
+        font-size: 11px;
+        line-height: 1.2;
+        }
+
+        table.print-table th {
+            background-color: #f8fafc;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        /* Garis KOP Surat Ganda */
+        .kop-border {
+            border-bottom: 3px double #000000;
+        }
+
+        /* Sel yang dapat diedit langsung */
+        .editable-cell:focus {
+            outline: 2px solid #2563eb;
+            background-color: #eff6ff;
+        }
+
+        /* Aturan Media Print */
+        @media print {
+            body {
+                background: #ffffff !important;
+                padding: 0 !important;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .paper-sheet {
+                width: 100% !important;
+                min-height: auto !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                box-shadow: none !important;
+            }
+
+            table.print-table th, 
+            table.print-table td {
+                border: 1px solid #000000 !important;
+                padding: 5px 7px !important; /* Optimasi ekstra saat dicetak */
+                font-size: 11px !important;
+            }
+
+            .signature-space {
+                height: 55px !important; /* Ruang TTD pas untuk 1 lembar F4 */
+            }
+        }
+    </style>
+</head>
+<body class="py-6 min-h-screen">
+
+    <!-- Top Navigation Bar Controls (TIDAK IKUT DICETAK) -->
+    <div class="no-print max-w-5xl mx-auto mb-6 bg-slate-800 text-white p-4 rounded-xl shadow-lg flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <i class="fa-solid fa-file-invoice text-amber-400 text-2xl"></i>
+            <div>
+                <h1 class="font-sans font-bold text-base leading-tight">Generator Presensi Digital (Ukuran F4)</h1>
+                <p class="font-sans text-xs text-slate-300">Layout Presisi 31 Hari Lengkap dalam 1 Halaman Cetak</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <button onclick="randomizeAllTimes()" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-sans font-semibold text-xs px-3 py-2 rounded-lg transition-colors flex items-center gap-1.5">
+                <i class="fa-solid fa-shuffle"></i> Acak Jam
+            </button>
+            <button onclick="triggerPrint()" class="bg-blue-600 hover:bg-blue-700 text-white font-sans font-semibold text-xs px-4 py-2 rounded-lg transition-colors flex items-center gap-1.5 shadow-md">
+                <i class="fa-solid fa-print"></i> Cetak / Simpan PDF
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Container Layout -->
+    <div class="max-w-[1400px] mx-auto flex flex-col lg:flex-row gap-6 items-start justify-center">
+
+        <!-- Sidebar Panel Kontrol (TIDAK IKUT DICETAK) -->
+        <div class="no-print w-full lg:w-80 bg-white p-5 rounded-xl shadow-md border border-slate-200 font-sans text-xs">
+            <h2 class="font-bold text-sm text-slate-800 mb-3 pb-2 border-b border-slate-200 flex items-center gap-2">
+                <i class="fa-solid fa-sliders text-blue-600"></i> Pengaturan Dokumen
+            </h2>
+
+            <div class="space-y-3">
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">Logo Instansi</label>
+                    <input type="file" id="inputLogoFile" accept="image/*" onchange="handleLogoUpload(event)" class="w-full text-slate-600 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200">
+                </div>
+
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">Instansi Atas (Gov 1)</label>
+                    <input type="text" id="inputGov1" value="PEMERINTAH KABUPATEN NGAWI" oninput="updateDocument()" class="w-full px-2.5 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-blue-500 outline-none">
+                </div>
+
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">Dinas / OPD (Gov 2)</label>
+                    <input type="text" id="inputGov2" value="DINAS PENDIDIKAN DAN KEBUDAYAAN" oninput="updateDocument()" class="w-full px-2.5 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-blue-500 outline-none">
+                </div>
+
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">Nama Unit Kerja</label>
+                    <input type="text" id="inputUnitKerja" value="SDN KAWU 1 KEDUNGGALAR" oninput="updateDocument()" class="w-full px-2.5 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-blue-500 outline-none">
+                </div>
+
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">Nama Pegawai</label>
+                    <input type="text" id="inputNamaPegawai" value="ALIF SAIROJI, S.Pd" oninput="updateDocument()" class="w-full px-2.5 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-blue-500 outline-none">
+                </div>
+
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">NIP Pegawai</label>
+                    <input type="text" id="inputNipPegawai" value="199209102023211006" oninput="updateDocument()" class="w-full px-2.5 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-blue-500 outline-none">
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1">Bulan</label>
+                        <select id="inputBulan" onchange="onMonthYearChange()" class="w-full px-2 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-blue-500 outline-none">
+                            <option value="0">Januari</option>
+                            <option value="1">Februari</option>
+                            <option value="2">Maret</option>
+                            <option value="3">April</option>
+                            <option value="4">Mei</option>
+                            <option value="5">Juni</option>
+                            <option value="6">Juli</option>
+                            <option value="7" selected>Agustus</option>
+                            <option value="8">September</option>
+                            <option value="9">Oktober</option>
+                            <option value="10">November</option>
+                            <option value="11">Desember</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1">Tahun</label>
+                        <input type="number" id="inputTahun" value="2026" onchange="onMonthYearChange()" class="w-full px-2 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-blue-500 outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">Pilih Hari Libur Khusus (Senin-Jumat)</label>
+                    <div id="holidayPickerGrid" class="grid grid-cols-7 gap-1 p-2 bg-slate-50 border border-slate-200 rounded max-h-28 overflow-y-auto">
+                        <!-- Dynamic Checkbox Grid -->
+                    </div>
+                </div>
+
+                <hr class="my-2 border-slate-200">
+
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">Kota Tempat TTD</label>
+                    <input type="text" id="inputKota" value="Ngawi" oninput="updateDocument()" class="w-full px-2.5 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-blue-500 outline-none">
+                </div>
+
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">Nama Kepala Sekolah</label>
+                    <input type="text" id="inputNamaKepsek" value="SITI KALMATUS SAKDIYAH, S.Pd" oninput="updateDocument()" class="w-full px-2.5 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-blue-500 outline-none">
+                </div>
+
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">NIP Kepala Sekolah</label>
+                    <input type="text" id="inputNipKepsek" value="197809212008012012" oninput="updateDocument()" class="w-full px-2.5 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-blue-500 outline-none">
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="font-medium text-slate-700">Timestamp Cetak Footer</label>
+                        <button type="button" onclick="setCurrentTimestamp()" class="text-[10px] text-blue-600 hover:underline">Saat Ini</button>
+                    </div>
+                    <input type="text" id="inputPrintTimestamp" value="31/8/2026, 10.24.25" oninput="updateDocument()" class="w-full px-2.5 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-blue-500 outline-none font-mono">
+                </div>
+            </div>
+        </div>
+
+        <!-- Area Preview Lembar Dokumen F4 Cetak -->
+        <div class="paper-sheet flex flex-col justify-between">
+            <div>
+                <!-- Header Kop Surat -->
+                <div class="relative kop-border pb-2 mb-3 text-center">
+                    <img id="docLogoImg" src="" alt="Logo Instansi" class="absolute left-1 top-0 w-16 h-16 object-contain">
+                    <div id="qrcode" class="absolute right-1 top-0 w-16 h-16 flex items-center justify-center"></div>
+                    
+                    <h3 id="docGov1" class="text-sm font-bold tracking-wide uppercase leading-tight">PEMERINTAH KABUPATEN NGAWI</h3>
+                    <h2 id="docGov2" class="text-base font-bold tracking-wider uppercase leading-tight my-0.5">DINAS PENDIDIKAN DAN KEBUDAYAAN</h2>
+                    <h1 id="docUnitKerjaHeader" class="text-sm font-bold tracking-wide uppercase leading-tight">SDN KAWU 1 KEDUNGGALAR</h1>
+                </div>
+
+                <!-- Judul Dokumen -->
+                <div class="text-center font-bold text-xs uppercase underline tracking-wider mb-3">
+                    LAPORAN DAFTAR HADIR HARIAN PEGAWAI
+                </div>
+
+                <!-- Informasi Metadata Pegawai -->
+                <table class="w-full mb-2 text-xs leading-tight">
+                    <tr>
+                        <td class="w-28 py-0.5">Nama Pegawai</td>
+                        <td class="w-3 text-center">:</td>
+                        <td id="docNamaPegawai" class="font-bold py-0.5">ALIF SAIROJI, S.Pd</td>
+                    </tr>
+                    <tr>
+                        <td class="py-0.5">NIP</td>
+                        <td class="text-center">:</td>
+                        <td id="docNipPegawai" class="font-mono py-0.5">199209102023211006</td>
+                    </tr>
+                    <tr>
+                        <td class="py-0.5">Unit Kerja</td>
+                        <td class="text-center">:</td>
+                        <td id="docUnitKerjaInfo" class="py-0.5">SDN KAWU 1 KEDUNGGALAR</td>
+                    </tr>
+                    <tr>
+                        <td class="py-0.5">Periode</td>
+                        <td class="text-center">:</td>
+                        <td id="docPeriode" class="py-0.5">Agustus 2026</td>
+                    </tr>
+                </table>
+
+                <!-- Tabel Presensi Utama -->
+                <table class="print-table w-full">
+                    <thead>
+                        <tr>
+                            <th class="w-[8%] text-center">TGL</th>
+                            <th class="w-[22%] text-center">HARI</th>      
+                            <th class="w-[24%] text-center">MASUK</th>     
+                            <th class="w-[24%] text-center">PULANG</th>    
+                            <th class="w-[22%] text-center">KETERANGAN</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attendanceTableBody">
+                        <!-- Dynamic Rows -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Bagian Bawah: TTD & Footer -->
+            <div class="mt-4">
+                <!-- Signature Area (Dikosongkan untuk TTD Basah) -->
+                <div class="flex justify-end text-xs">
+                    <div class="w-64 text-left">
+                        <div id="docTtdKotaTanggal">Ngawi, 31 Agustus 2026</div>
+                        <div>Kepala Sekolah,</div>
+                        
+                        <!-- Ruang kosong khusus TTD basah & Stempel Manual -->
+                        <div class="signature-space h-16"></div>
+                        
+                        <div id="docNamaKepsek" class="font-bold underline">SITI KALMATUS SAKDIYAH, S.Pd</div>
+                        <div id="docNipKepsek" class="font-mono">NIP 197809212008012012</div>
+                    </div>
+                </div>
+
+                <!-- Footer Dokumen Digital -->
+                <div class="mt-4 pt-1.5 border-t border-slate-300 flex justify-between items-center text-[10px] text-slate-700 font-sans">
+                    <span id="docFooterLeft">Dokumen Asli Presensi Digital QR-GATE Kabupaten Ngawi</span>
+                    <span id="docFooterRight" class="font-mono">Dicetak pada: 31/8/2026, 10.24.25  Hal 1</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Logika Otomatisasi -->
+    <script>
+        const state = {
+            gov1: "PEMERINTAH KABUPATEN NGAWI",
+            gov2: "DINAS PENDIDIKAN DAN KEBUDAYAAN",
+            unitKerja: "SDN KAWU 1 KEDUNGGALAR",
+            kota: "Ngawi",
+            namaPegawai: "ALIF SAIROJI, S.Pd",
+            nipPegawai: "199209102023211006",
+            namaKepsek: "SITI KALMATUS SAKDIYAH, S.Pd",
+            nipKepsek: "197809212008012012",
+            bulanIdx: 7, 
+            tahun: 2026,
+            holidays: [17, 25], 
+            printTimestamp: "31/8/2026, 10.24.25",
+            logoUrl: null,
+            attendanceData: []
+        };
+
+        const monthNames = [
+            "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+            "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+        ];
+
+        const dayNames = [
+            "Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"
+        ];
+
+        function randInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function pad2(n) {
+            return n.toString().padStart(2, '0');
+        }
+
+        function generateDayTime(dayOfWeek) {
+            if (dayOfWeek === 0 || dayOfWeek === 6) {
+                return { masuk: "", pulang: "" };
+            }
+
+            // Masuk < 07:00
+            const masukMin = randInt(42, 58);
+            const masukSec = randInt(0, 59);
+            const masukStr = `06:${pad2(masukMin)}:${pad2(masukSec)}`;
+
+            let pulangStr = "";
+            if (dayOfWeek === 5) {
+                // Jumat Pulang >= 14:30
+                const pulangMin = randInt(30, 48);
+                const pulangSec = randInt(0, 59);
+                pulangStr = `14:${pad2(pulangMin)}:${pad2(pulangSec)}`;
+            } else {
+                // Senin-Kamis Pulang >= 15:00
+                const pulangMin = randInt(1, 14);
+                const pulangSec = randInt(0, 59);
+                pulangStr = `15:${pad2(pulangMin)}:${pad2(pulangSec)}`;
+            }
+
+            return { masuk: masukStr, pulang: pulangStr };
+        }
+
+        function buildAttendanceData(keepExistingTimes = false) {
+            const year = state.tahun;
+            const month = state.bulanIdx;
+            const totalDays = new Date(year, month + 1, 0).getDate();
+            
+            const newAttendance = [];
+
+            for (let d = 1; d <= totalDays; d++) {
+                const dateObj = new Date(year, month, d);
+                const dayOfWeek = dateObj.getDay();
+                const dayName = dayNames[dayOfWeek];
+
+                let masuk = "";
+                let pulang = "";
+                let status = "Hadir";
+
+                if (dayOfWeek === 6) {
+                    status = "Sabtu";
+                } else if (dayOfWeek === 0) {
+                    status = "Minggu";
+                } else if (state.holidays.includes(d)) {
+                    status = "Libur";
+                } else {
+                    if (keepExistingTimes && state.attendanceData[d - 1] && state.attendanceData[d - 1].status === "Hadir") {
+                        masuk = state.attendanceData[d - 1].masuk;
+                        pulang = state.attendanceData[d - 1].pulang;
+                    } else {
+                        const times = generateDayTime(dayOfWeek);
+                        masuk = times.masuk;
+                        pulang = times.pulang;
+                    }
+                }
+
+                newAttendance.push({
+                    tgl: d,
+                    hari: dayName,
+                    dayOfWeek: dayOfWeek,
+                    masuk: masuk,
+                    pulang: pulang,
+                    status: status
+                });
+            }
+
+            state.attendanceData = newAttendance;
+            renderAttendanceTable();
+        }
+
+        function renderAttendanceTable() {
+            const tbody = document.getElementById("attendanceTableBody");
+            tbody.innerHTML = "";
+
+            state.attendanceData.forEach((row, idx) => {
+                const tr = document.createElement("tr");
+
+                if (row.status === "Sabtu" || row.status === "Minggu" || row.status === "Libur") {
+                    tr.className = "bg-slate-50 text-slate-500 font-normal";
+                } else {
+                    tr.className = "hover:bg-amber-50/30";
+                }
+
+                tr.innerHTML = `
+                    <td class="font-mono text-center">${row.tgl}</td>
+                    <td class="text-left px-1.5">${row.hari}</td>
+                    <td class="font-mono text-center editable-cell" contenteditable="true" onblur="updateCellData(${idx}, 'masuk', this.innerText)">${row.masuk}</td>
+                    <td class="font-mono text-center editable-cell" contenteditable="true" onblur="updateCellData(${idx}, 'pulang', this.innerText)">${row.pulang}</td>
+                    <td class="text-center editable-cell" contenteditable="true" onblur="updateCellData(${idx}, 'status', this.innerText)">${row.status}</td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateCellData(index, field, value) {
+            if (state.attendanceData[index]) {
+                state.attendanceData[index][field] = value.trim();
+            }
+        }
+
+        function renderHolidayPicker() {
+            const grid = document.getElementById("holidayPickerGrid");
+            grid.innerHTML = "";
+
+            const totalDays = new Date(state.tahun, state.bulanIdx + 1, 0).getDate();
+
+            for (let d = 1; d <= totalDays; d++) {
+                const dateObj = new Date(state.tahun, state.bulanIdx, d);
+                const dayOfWeek = dateObj.getDay();
+                const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+                const isHoliday = state.holidays.includes(d);
+
+                const btn = document.createElement("button");
+                btn.type = "button";
+                btn.innerText = d;
+
+                if (isWeekend) {
+                    btn.className = "p-1 rounded bg-slate-200 text-slate-400 cursor-not-allowed text-[11px]";
+                    btn.title = dayNames[dayOfWeek] + " (Akhir Pekan)";
+                } else if (isHoliday) {
+                    btn.className = "p-1 rounded bg-red-500 text-white font-bold text-[11px] hover:bg-red-600";
+                    btn.onclick = () => toggleHoliday(d);
+                    btn.title = "Hari Libur Khusus";
+                } else {
+                    btn.className = "p-1 rounded bg-white hover:bg-indigo-50 border border-slate-200 text-slate-700 text-[11px]";
+                    btn.onclick = () => toggleHoliday(d);
+                    btn.title = "Klik untuk tandai Hari Libur";
+                }
+
+                grid.appendChild(btn);
+            }
+        }
+
+        function toggleHoliday(day) {
+            const idx = state.holidays.indexOf(day);
+            if (idx > -1) {
+                state.holidays.splice(idx, 1);
+            } else {
+                state.holidays.push(day);
+            }
+            renderHolidayPicker();
+            buildAttendanceData(true);
+        }
+
+        function onMonthYearChange() {
+            state.bulanIdx = parseInt(document.getElementById("inputBulan").value);
+            state.tahun = parseInt(document.getElementById("inputTahun").value);
+            
+            const lastDay = new Date(state.tahun, state.bulanIdx + 1, 0).getDate();
+            state.printTimestamp = `${lastDay}/${state.bulanIdx + 1}/${state.tahun}, 10.24.25`;
+            document.getElementById("inputPrintTimestamp").value = state.printTimestamp;
+
+            renderHolidayPicker();
+            buildAttendanceData(false);
+            updateDocument();
+        }
+
+        function createDefaultLogoSVG() {
+            return `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+                <circle cx="50" cy="50" r="45" fill="none" stroke="%231e3a8a" stroke-width="4"/>
+                <circle cx="50" cy="50" r="38" fill="none" stroke="%231e3a8a" stroke-width="1.5"/>
+                <polygon points="50,15 61,38 85,38 66,52 73,76 50,61 27,76 34,52 15,38 39,38" fill="%23f59e0b"/>
+                <path d="M 25 70 Q 50 85 75 70" fill="none" stroke="%231e3a8a" stroke-width="3"/>
+                <text x="50" y="92" font-family="Arial" font-size="7" font-weight="bold" text-anchor="middle" fill="%231e3a8a">TUT WURI HANDAYANI</text>
+            </svg>`;
+        }
+
+        function handleLogoUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    state.logoUrl = e.target.result;
+                    document.getElementById("docLogoImg").src = state.logoUrl;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function resetLogo() {
+            state.logoUrl = createDefaultLogoSVG();
+            document.getElementById("docLogoImg").src = state.logoUrl;
+            document.getElementById("inputLogoFile").value = "";
+        }
+
+        function updateQRCode() {
+            const qrContainer = document.getElementById("qrcode");
+            qrContainer.innerHTML = "";
+
+            const periodeStr = `${monthNames[state.bulanIdx]} ${state.tahun}`;
+            const qrText = `PRESENSI DIGITAL | ${state.namaPegawai} (${state.nipPegawai}) | ${state.unitKerja} | Periode: ${periodeStr} | QR-GATE ${state.kota}`;
+
+            try {
+                new QRCode(qrContainer, {
+                    text: qrText,
+                    width: 60,
+                    height: 60,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.M
+                });
+            } catch (err) {
+                console.error("QR Code generation error:", err);
+            }
+        }
+
+        function updateDocument() {
+            state.gov1 = document.getElementById("inputGov1").value;
+            state.gov2 = document.getElementById("inputGov2").value;
+            state.unitKerja = document.getElementById("inputUnitKerja").value;
+            state.kota = document.getElementById("inputKota").value;
+            state.namaPegawai = document.getElementById("inputNamaPegawai").value;
+            state.nipPegawai = document.getElementById("inputNipPegawai").value;
+            state.namaKepsek = document.getElementById("inputNamaKepsek").value;
+            state.nipKepsek = document.getElementById("inputNipKepsek").value;
+            state.printTimestamp = document.getElementById("inputPrintTimestamp").value;
+
+            document.getElementById("docGov1").innerText = state.gov1;
+            document.getElementById("docGov2").innerText = state.gov2;
+            document.getElementById("docUnitKerjaHeader").innerText = state.unitKerja;
+            document.getElementById("docNamaPegawai").innerText = state.namaPegawai;
+            document.getElementById("docNipPegawai").innerText = state.nipPegawai;
+            document.getElementById("docUnitKerjaInfo").innerText = state.unitKerja;
+            
+            const periodeStr = `${monthNames[state.bulanIdx]} ${state.tahun}`;
+            document.getElementById("docPeriode").innerText = periodeStr;
+
+            const lastDay = new Date(state.tahun, state.bulanIdx + 1, 0).getDate();
+            document.getElementById("docTtdKotaTanggal").innerText = `${state.kota}, ${lastDay} ${periodeStr}`;
+
+            document.getElementById("docNamaKepsek").innerText = state.namaKepsek;
+            document.getElementById("docNipKepsek").innerText = `NIP ${state.nipKepsek}`;
+
+            document.getElementById("docFooterLeft").innerText = `Dokumen Asli Presensi Digital QR-GATE Kabupaten ${state.kota}`;
+            document.getElementById("docFooterRight").innerText = `Dicetak pada: ${state.printTimestamp}  Hal 1`;
+
+            updateQRCode();
+        }
+
+        function randomizeAllTimes() {
+            buildAttendanceData(false);
+        }
+
+        function setCurrentTimestamp() {
+            const now = new Date();
+            const dateStr = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
+            const timeStr = `${pad2(now.getHours())}.${pad2(now.getMinutes())}.${pad2(now.getSeconds())}`;
+            const formatted = `${dateStr}, ${timeStr}`;
+            
+            document.getElementById("inputPrintTimestamp").value = formatted;
+            state.printTimestamp = formatted;
+            updateDocument();
+        }
+
+        function triggerPrint() {
+            window.print();
+        }
+
+        window.onload = function() {
+            resetLogo();
+            renderHolidayPicker();
+            buildAttendanceData(false);
+            updateDocument();
+        };
+    </script>
+</body>
+</html>
