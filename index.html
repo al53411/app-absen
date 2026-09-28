@@ -43,10 +43,10 @@
 
         table.print-table th, 
         table.print-table td {
-        border: 1px solid #000000 !important;
-        padding: 4px 6px !important; /* <--- UBAH DI SINI */
-        font-size: 11px;
-        line-height: 1.2;
+            border: 1px solid #000000 !important;
+            padding: 4px 6px !important;
+            font-size: 11px;
+            line-height: 1.2;
         }
 
         table.print-table th {
@@ -88,12 +88,12 @@
             table.print-table th, 
             table.print-table td {
                 border: 1px solid #000000 !important;
-                padding: 5px 7px !important; /* Optimasi ekstra saat dicetak */
+                padding: 5px 7px !important;
                 font-size: 11px !important;
             }
 
             .signature-space {
-                height: 55px !important; /* Ruang TTD pas untuk 1 lembar F4 */
+                height: 55px !important;
             }
         }
     </style>
@@ -223,7 +223,6 @@
                 <!-- Header Kop Surat -->
                 <div class="relative kop-border pb-2 mb-3 text-center">
                     <img id="docLogoImg" src="" alt="Logo Instansi" class="absolute left-1 top-0 w-16 h-16 object-contain">
-                    <div id="qrcode" class="absolute right-1 top-0 w-16 h-16 flex items-center justify-center"></div>
                     
                     <h3 id="docGov1" class="text-sm font-bold tracking-wide uppercase leading-tight">PEMERINTAH KABUPATEN NGAWI</h3>
                     <h2 id="docGov2" class="text-base font-bold tracking-wider uppercase leading-tight my-0.5">DINAS PENDIDIKAN DAN KEBUDAYAAN</h2>
@@ -235,38 +234,43 @@
                     LAPORAN DAFTAR HADIR HARIAN PEGAWAI
                 </div>
 
-                <!-- Informasi Metadata Pegawai -->
-                <table class="w-full mb-2 text-xs leading-tight">
-                    <tr>
-                        <td class="w-28 py-0.5">Nama Pegawai</td>
-                        <td class="w-3 text-center">:</td>
-                        <td id="docNamaPegawai" class="font-bold py-0.5">ALIF SAIROJI, S.Pd</td>
-                    </tr>
-                    <tr>
-                        <td class="py-0.5">NIP</td>
-                        <td class="text-center">:</td>
-                        <td id="docNipPegawai" class="font-mono py-0.5">199209102023211006</td>
-                    </tr>
-                    <tr>
-                        <td class="py-0.5">Unit Kerja</td>
-                        <td class="text-center">:</td>
-                        <td id="docUnitKerjaInfo" class="py-0.5">SDN KAWU 1 KEDUNGGALAR</td>
-                    </tr>
-                    <tr>
-                        <td class="py-0.5">Periode</td>
-                        <td class="text-center">:</td>
-                        <td id="docPeriode" class="py-0.5">Agustus 2026</td>
-                    </tr>
-                </table>
+                <!-- Informasi Metadata Pegawai & QR Code (Sejajar) -->
+                <div class="flex justify-between items-start mb-2">
+                    <table class="text-xs leading-tight">
+                        <tr>
+                            <td class="w-28 py-0.5">Nama Pegawai</td>
+                            <td class="w-3 text-center">:</td>
+                            <td id="docNamaPegawai" class="font-bold py-0.5">ALIF SAIROJI, S.Pd</td>
+                        </tr>
+                        <tr>
+                            <td class="py-0.5">NIP</td>
+                            <td class="text-center">:</td>
+                            <td id="docNipPegawai" class="font-mono py-0.5">199209102023211006</td>
+                        </tr>
+                        <tr>
+                            <td class="py-0.5">Unit Kerja</td>
+                            <td class="text-center">:</td>
+                            <td id="docUnitKerjaInfo" class="py-0.5">SDN KAWU 1 KEDUNGGALAR</td>
+                        </tr>
+                        <tr>
+                            <td class="py-0.5">Periode</td>
+                            <td class="text-center">:</td>
+                            <td id="docPeriode" class="py-0.5">Agustus 2026</td>
+                        </tr>
+                    </table>
+
+                    <!-- Posisi QR Code Sejajar Kanan -->
+                    <div id="qrcode" class="w-20 h-20 flex items-center justify-center shrink-0"></div>
+                </div>
 
                 <!-- Tabel Presensi Utama -->
                 <table class="print-table w-full">
                     <thead>
                         <tr>
                             <th class="w-[8%] text-center">TGL</th>
-                            <th class="w-[22%] text-center">HARI</th>      
-                            <th class="w-[24%] text-center">MASUK</th>     
-                            <th class="w-[24%] text-center">PULANG</th>    
+                            <th class="w-[22%] text-center">HARI</th>     
+                            <th class="w-[24%] text-center">MASUK</th>    
+                            <th class="w-[24%] text-center">PULANG</th>   
                             <th class="w-[22%] text-center">KETERANGAN</th>
                         </tr>
                     </thead>
@@ -278,7 +282,7 @@
 
             <!-- Bagian Bawah: TTD & Footer -->
             <div class="mt-4">
-                <!-- Signature Area (Dikosongkan untuk TTD Basah) -->
+                <!-- Signature Area -->
                 <div class="flex justify-end text-xs">
                     <div class="w-64 text-left">
                         <div id="docTtdKotaTanggal">Ngawi, 31 Agustus 2026</div>
@@ -526,38 +530,6 @@
             document.getElementById("inputLogoFile").value = "";
         }
 
-      function updateQRCode() {
-    const qrContainer = document.getElementById("qrcode");
-    qrContainer.innerHTML = "";
-
-    const periodeStr = `${monthNames[state.bulanIdx]} ${state.tahun}`;
-    
-    // Teks dibuat ringkas dengan pemisah '|' agar titik QR tidak terlalu rapat
-    const qrText = `PRESENSI DIGITAL | Pegawai: ${state.namaPegawai} (${state.nipPegawai}) | Unit: ${state.unitKerja} | Periode: ${periodeStr} | Kepsek: ${state.namaKepsek} (NIP.${state.nipKepsek}) | Tgl Cetak: ${state.printTimestamp}`;
-
-    try {
-        new QRCode(qrContainer, {
-            text: qrText,
-            width: 128,   // Resolusi tinggi agar titik QR tajam
-            height: 128,  // Resolusi tinggi agar titik QR tajam
-            colorDark: "#000000",
-            colorLight: "#ffffff",
-            correctLevel: QRCode.CorrectLevel.L
-        });
-
-        // Paksa gambar QR hasil generate agar pas di dalam kotak header tanpa merusak layout
-        setTimeout(() => {
-            const qrImg = qrContainer.querySelector("img");
-            if (qrImg) {
-                qrImg.style.width = "100%";
-                qrImg.style.height = "100%";
-                qrImg.style.objectFit = "contain";
-            }
-        }, 50);
-    } catch (err) {
-        console.error("QR Code generation error:", err);
-    }
-}
         function updateDocument() {
             state.gov1 = document.getElementById("inputGov1").value;
             state.gov2 = document.getElementById("inputGov2").value;
@@ -589,6 +561,39 @@
             document.getElementById("docFooterRight").innerText = `Dicetak pada: ${state.printTimestamp}  Hal 1`;
 
             updateQRCode();
+        }
+
+        function updateQRCode() {
+            const qrContainer = document.getElementById("qrcode");
+            qrContainer.innerHTML = "";
+
+            const periodeStr = `${monthNames[state.bulanIdx]} ${state.tahun}`;
+            
+            // Teks dibuat ringkas dengan pemisah '|' agar titik QR tidak terlalu rapat
+            const qrText = `PRESENSI DIGITAL | Pegawai: ${state.namaPegawai} (${state.nipPegawai}) | Unit: ${state.unitKerja} | Periode: ${periodeStr} | Kepsek: ${state.namaKepsek} (NIP.${state.nipKepsek}) | Tgl Cetak: ${state.printTimestamp}`;
+
+            try {
+                new QRCode(qrContainer, {
+                    text: qrText,
+                    width: 128,   // Resolusi tinggi agar titik QR tajam
+                    height: 128,  // Resolusi tinggi agar titik QR tajam
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.L
+                });
+
+                // Paksa gambar QR hasil generate agar pas di dalam kotak tanpa merusak layout
+                setTimeout(() => {
+                    const qrImg = qrContainer.querySelector("img");
+                    if (qrImg) {
+                        qrImg.style.width = "100%";
+                        qrImg.style.height = "100%";
+                        qrImg.style.objectFit = "contain";
+                    }
+                }, 50);
+            } catch (err) {
+                console.error("QR Code generation error:", err);
+            }
         }
 
         function randomizeAllTimes() {
