@@ -526,26 +526,33 @@
             document.getElementById("inputLogoFile").value = "";
         }
 
-        function updateQRCode() {
-            const qrContainer = document.getElementById("qrcode");
-            qrContainer.innerHTML = "";
+      function updateQRCode() {
+        const qrContainer = document.getElementById("qrcode");
+        qrContainer.innerHTML = "";
 
-            const periodeStr = `${monthNames[state.bulanIdx]} ${state.tahun}`;
-            const qrText = `PRESENSI DIGITAL | ${state.namaPegawai} (${state.nipPegawai}) | ${state.unitKerja} | Periode: ${periodeStr} | QR-GATE ${state.kota}`;
+        const periodeStr = `${monthNames[state.bulanIdx]} ${state.tahun}`;
+        
+        // Teks yang akan terbaca saat QR Code di-scan
+        const qrText = `PRESENSI DIGITAL\n` +
+                    `Pegawai: ${state.namaPegawai} (${state.nipPegawai})\n` +
+                    `Unit Kerja: ${state.unitKerja}\n` +
+                    `Periode: ${periodeStr}\n` +
+                    `Kepala Sekolah: ${state.namaKepsek} (NIP. ${state.nipKepsek})\n` +
+                    `Tgl Unduh/Cetak: ${state.printTimestamp}`;
 
-            try {
-                new QRCode(qrContainer, {
-                    text: qrText,
-                    width: 60,
-                    height: 60,
-                    colorDark: "#000000",
-                    colorLight: "#ffffff",
-                    correctLevel: QRCode.CorrectLevel.M
-                });
-            } catch (err) {
-                console.error("QR Code generation error:", err);
-            }
+        try {
+            new QRCode(qrContainer, {
+                text: qrText,
+                width: 64,
+                height: 64,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.L // Menggunakan Level L agar QR tetap mudah di-scan meskipun isi teks lebih panjang
+            });
+        } catch (err) {
+            console.error("QR Code generation error:", err);
         }
+    }
 
         function updateDocument() {
             state.gov1 = document.getElementById("inputGov1").value;
